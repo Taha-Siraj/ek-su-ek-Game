@@ -18,6 +18,42 @@ class _LoginGuestAccessScreenState extends State<LoginGuestAccessScreen> with Si
   late AnimationController _fadeController;
   final List<Point<double>> _particles = [];
   final Random _random = Random();
+  bool _isGoogleLoading = false;
+
+  void _onGoogleLogin() async {
+    final audio = Provider.of<AudioManager>(context, listen: false);
+    audio.playClick();
+    audio.triggerHaptic();
+    setState(() {
+      _isGoogleLoading = true;
+    });
+    try {
+      await audio.signInWithGoogle();
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => const AppNavigationWrapper(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 600),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isGoogleLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Google login failed: ${e.toString().split(']').last.trim()}"),
+            backgroundColor: MidnightNeonTheme.danger,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -367,67 +403,45 @@ class _LoginGuestAccessScreenState extends State<LoginGuestAccessScreen> with Si
                                         ],
                                       ),
                                       const SizedBox(height: 16),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: InkWell(
-                                              onTap: () => _onLogin("GoogleRacer_101", Icons.g_mobiledata),
-                                              borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
-                                              child: Container(
-                                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                                decoration: BoxDecoration(
-                                                  border: Border.all(color: MidnightNeonTheme.borderGlass),
-                                                  borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
-                                                  color: Colors.white.withOpacity(0.02),
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: [
-                                                    const Icon(Icons.g_mobiledata, color: Colors.white, size: 24),
-                                                    const SizedBox(width: 8),
-                                                    Text(
-                                                      "Google",
-                                                      style: MidnightNeonTheme.buttonText.copyWith(
-                                                        color: Colors.white,
-                                                        fontSize: 14,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
+                                      if (_isGoogleLoading) ...[
+                                        const Center(
+                                          child: SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation<Color>(MidnightNeonTheme.primaryContainer),
                                             ),
                                           ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            child: InkWell(
-                                              onTap: () => _onLogin("AppleRacer_101", Icons.apple),
+                                        ),
+                                      ] else ...[
+                                        InkWell(
+                                          onTap: _onGoogleLogin,
+                                          borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(vertical: 14),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(color: MidnightNeonTheme.primaryContainer.withOpacity(0.5)),
                                               borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
-                                              child: Container(
-                                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                                decoration: BoxDecoration(
-                                                  border: Border.all(color: MidnightNeonTheme.borderGlass),
-                                                  borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
-                                                  color: Colors.white.withOpacity(0.02),
+                                              color: MidnightNeonTheme.primaryContainer.withOpacity(0.08),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(Icons.g_mobiledata, color: MidnightNeonTheme.primaryContainer, size: 24),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  "Google",
+                                                  style: MidnightNeonTheme.buttonText.copyWith(
+                                                    color: MidnightNeonTheme.primaryContainer,
+                                                    fontSize: 14,
+                                                  ),
                                                 ),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: [
-                                                    const Icon(Icons.apple, color: Colors.white, size: 20),
-                                                    const SizedBox(width: 8),
-                                                    Text(
-                                                      "Apple",
-                                                      style: MidnightNeonTheme.buttonText.copyWith(
-                                                        color: Colors.white,
-                                                        fontSize: 14,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
+                                              ],
                                             ),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                       const SizedBox(height: 16),
                                       NeonButton.secondary(
                                         text: "SIGN IN WITH EMAIL",

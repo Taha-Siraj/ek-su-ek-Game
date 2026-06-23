@@ -35,11 +35,22 @@ class _HomeDashboardAnimatedState extends State<HomeDashboardAnimated> {
 
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => const GameplayGridScreen(),
+            builder: (context) => const GameplayGridScreen(isTrainingMode: false),
           ),
         );
       }
     });
+  }
+
+  void _startTraining() {
+    final audio = Provider.of<AudioManager>(context, listen: false);
+    audio.playClick();
+    audio.triggerHaptic();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const GameplayGridScreen(isTrainingMode: true),
+      ),
+    );
   }
 
   @override
@@ -194,7 +205,7 @@ class _HomeDashboardAnimatedState extends State<HomeDashboardAnimated> {
                   children: [
                     Expanded(
                       child: InkWell(
-                        onTap: _isSearchingMatch ? null : _startMatchmaking,
+                        onTap: _isSearchingMatch ? null : _startTraining,
                         borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusLarge),
                         child: GlassCard(
                           padding: const EdgeInsets.all(12),

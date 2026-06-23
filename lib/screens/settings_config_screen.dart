@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../theme.dart';
 import '../widgets/glass_card.dart';
 import '../services/audio_manager.dart';
@@ -63,7 +64,16 @@ class SettingsConfigScreen extends StatelessWidget {
   }
 
   void _showChangeAvatarDialog(BuildContext context, AudioManager audio) {
-    final List<IconData> avatarList = [
+    final List<String> presetImages = [
+      'https://api.dicebear.com/7.x/bottts/png?seed=Cyber1',
+      'https://api.dicebear.com/7.x/bottts/png?seed=Cyber2',
+      'https://api.dicebear.com/7.x/bottts/png?seed=Neon3',
+      'https://api.dicebear.com/7.x/bottts/png?seed=Retro4',
+      'https://api.dicebear.com/7.x/bottts/png?seed=Gold5',
+      'https://api.dicebear.com/7.x/bottts/png?seed=Pixel6',
+    ];
+
+    final List<IconData> presetIcons = [
       Icons.face_retouching_natural,
       Icons.emoji_events,
       Icons.bolt,
@@ -73,58 +83,176 @@ class SettingsConfigScreen extends StatelessWidget {
       Icons.pets,
       Icons.public,
     ];
+
+    final googlePhotoUrl = FirebaseAuth.instance.currentUser?.photoURL;
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: MidnightNeonTheme.bgSecondary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusLarge),
+            side: const BorderSide(color: MidnightNeonTheme.borderGlass),
+          ),
           title: Text(
             "CHOOSE AVATAR",
             style: MidnightNeonTheme.headlineMd.copyWith(color: MidnightNeonTheme.primaryContainer, fontSize: 18),
           ),
           content: SizedBox(
             width: double.maxFinite,
-            child: GridView.builder(
-              shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: avatarList.length,
-              itemBuilder: (context, index) {
-                final icon = avatarList[index];
-                final isSelected = audio.playerAvatar == icon;
-                return InkWell(
-                  onTap: () {
-                    audio.playClick();
-                    audio.playerAvatar = icon;
-                    Navigator.of(context).pop();
-                  },
-                  borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? MidnightNeonTheme.primaryContainer.withOpacity(0.15)
-                          : MidnightNeonTheme.surfaceContainerLow,
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (googlePhotoUrl != null) ...[
+                    Text(
+                      "GOOGLE PROFILE PHOTO",
+                      style: MidnightNeonTheme.labelCaps.copyWith(fontSize: 10, color: MidnightNeonTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: () {
+                        audio.playClick();
+                        audio.playerAvatarUrl = googlePhotoUrl;
+                        Navigator.of(context).pop();
+                      },
                       borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
-                      border: Border.all(
-                        color: isSelected
-                            ? MidnightNeonTheme.primaryContainer
-                            : MidnightNeonTheme.borderGlass,
-                        width: isSelected ? 2 : 1,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: audio.playerAvatarUrl == googlePhotoUrl
+                              ? MidnightNeonTheme.primaryContainer.withOpacity(0.15)
+                              : MidnightNeonTheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
+                          border: Border.all(
+                            color: audio.playerAvatarUrl == googlePhotoUrl
+                                ? MidnightNeonTheme.primaryContainer
+                                : MidnightNeonTheme.borderGlass,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundImage: NetworkImage(googlePhotoUrl),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              "Use Google Account Photo",
+                              style: MidnightNeonTheme.bodyMd.copyWith(color: Colors.white, fontSize: 13),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    child: Icon(
-                      icon,
-                      color: isSelected
-                          ? MidnightNeonTheme.primaryContainer
-                          : Colors.white,
-                      size: 28,
-                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  Text(
+                    "PREMIUM CYBER AVATARS",
+                    style: MidnightNeonTheme.labelCaps.copyWith(fontSize: 10, color: MidnightNeonTheme.textSecondary),
                   ),
-                );
-              },
+                  const SizedBox(height: 8),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 1,
+                    ),
+                    itemCount: presetImages.length,
+                    itemBuilder: (context, index) {
+                      final url = presetImages[index];
+                      final isSelected = audio.playerAvatarUrl == url;
+                      return InkWell(
+                        onTap: () {
+                          audio.playClick();
+                          audio.playerAvatarUrl = url;
+                          Navigator.of(context).pop();
+                        },
+                        borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? MidnightNeonTheme.primaryContainer.withOpacity(0.15)
+                                : MidnightNeonTheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
+                            border: Border.all(
+                              color: isSelected
+                                  ? MidnightNeonTheme.primaryContainer
+                                  : MidnightNeonTheme.borderGlass,
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
+                            child: Image.network(
+                              url,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => const Center(
+                                child: Icon(Icons.broken_image, color: Colors.white24),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "CLASSIC ICONS",
+                    style: MidnightNeonTheme.labelCaps.copyWith(fontSize: 10, color: MidnightNeonTheme.textSecondary),
+                  ),
+                  const SizedBox(height: 8),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 1,
+                    ),
+                    itemCount: presetIcons.length,
+                    itemBuilder: (context, index) {
+                      final icon = presetIcons[index];
+                      final isSelected = audio.playerAvatarUrl == null && audio.playerAvatar == icon;
+                      return InkWell(
+                        onTap: () {
+                          audio.playClick();
+                          audio.playerAvatar = icon;
+                          Navigator.of(context).pop();
+                        },
+                        borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? MidnightNeonTheme.primaryContainer.withOpacity(0.15)
+                                : MidnightNeonTheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
+                            border: Border.all(
+                              color: isSelected
+                                  ? MidnightNeonTheme.primaryContainer
+                                  : MidnightNeonTheme.borderGlass,
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: Icon(
+                            icon,
+                            color: isSelected ? MidnightNeonTheme.primaryContainer : Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -302,6 +430,109 @@ class SettingsConfigScreen extends StatelessWidget {
     );
   }
 
+  void _showPrivacyPolicyDialog(BuildContext context, AudioManager audio) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: MidnightNeonTheme.bgSecondary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusLarge),
+            side: const BorderSide(color: MidnightNeonTheme.borderGlass),
+          ),
+          title: Text(
+            "PRIVACY POLICY",
+            style: MidnightNeonTheme.headlineMd.copyWith(
+              color: MidnightNeonTheme.primaryContainer,
+              fontSize: 16,
+              letterSpacing: 1.0,
+            ),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Effective Date: June 24, 2026",
+                    style: MidnightNeonTheme.bodyMd.copyWith(
+                      fontSize: 12,
+                      color: MidnightNeonTheme.primaryContainer,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Welcome to The Last Number (101). Your privacy is important to us. This Privacy Policy details how we collect, use, and protect your information.",
+                    style: MidnightNeonTheme.bodyMd.copyWith(fontSize: 12, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "1. Information We Collect",
+                    style: MidnightNeonTheme.headlineMd.copyWith(fontSize: 13, color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "• Account Data: When you sign in with Google or create an account, we store your profile name, email, and avatar picture on Firebase.\n"
+                    "• Game Progress: Wins, losses, level progression, and coins are synced to secure cloud databases to allow cross-device play.",
+                    style: MidnightNeonTheme.bodyMd.copyWith(fontSize: 12, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "2. How We Use Information",
+                    style: MidnightNeonTheme.headlineMd.copyWith(fontSize: 13, color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "We use your details to maintain the global leaderboard standings, personalize your gaming experience, sync data across your sessions, and secure our online systems.",
+                    style: MidnightNeonTheme.bodyMd.copyWith(fontSize: 12, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "3. Third-Party Services",
+                    style: MidnightNeonTheme.headlineMd.copyWith(fontSize: 13, color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "We integrate with Google Play Services, Firebase Authentication, Cloud Firestore, and Google Mobile Ads to deliver secure authentication, real-time data sync, and non-intrusive rewarded ads.",
+                    style: MidnightNeonTheme.bodyMd.copyWith(fontSize: 12, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "4. Data Security & Deletion",
+                    style: MidnightNeonTheme.headlineMd.copyWith(fontSize: 13, color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Your profile data is protected using industrial Firebase security protocols. You may request account and data deletion at any time by contacting our support team.",
+                    style: MidnightNeonTheme.bodyMd.copyWith(fontSize: 11, color: MidnightNeonTheme.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                audio.playClick();
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                "CLOSE",
+                style: MidnightNeonTheme.labelCaps.copyWith(
+                  color: MidnightNeonTheme.primaryContainer,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final audio = Provider.of<AudioManager>(context);
@@ -360,7 +591,10 @@ class SettingsConfigScreen extends StatelessWidget {
                                 ),
                                 child: CircleAvatar(
                                   backgroundColor: MidnightNeonTheme.surfaceContainerLow,
-                                  child: Icon(audio.playerAvatar, color: MidnightNeonTheme.primaryContainer, size: 36),
+                                  backgroundImage: audio.playerAvatarUrl != null ? NetworkImage(audio.playerAvatarUrl!) : null,
+                                  child: audio.playerAvatarUrl == null
+                                      ? Icon(audio.playerAvatar, color: MidnightNeonTheme.primaryContainer, size: 36)
+                                      : null,
                                 ),
                               ),
                               Positioned(
@@ -423,6 +657,16 @@ class SettingsConfigScreen extends StatelessWidget {
                         children: [
                           _buildSwitchRow(
                             icon: Icons.vibration,
+                            title: "Vibration Mode",
+                            value: audio.vibrateMode,
+                            onChanged: (val) {
+                              audio.vibrateMode = val;
+                              audio.triggerHaptic();
+                            },
+                          ),
+                          Divider(color: MidnightNeonTheme.borderGlass, height: 1),
+                          _buildSwitchRow(
+                            icon: Icons.smartphone,
                             title: "Haptic Feedback",
                             value: audio.hapticFeedback,
                             onChanged: (val) {
@@ -509,6 +753,7 @@ class SettingsConfigScreen extends StatelessWidget {
                           Divider(color: MidnightNeonTheme.borderGlass, height: 1),
                           _buildNavigationRow("Privacy Policy", Icons.policy, () {
                             audio.playClick();
+                            _showPrivacyPolicyDialog(context, audio);
                           }),
                         ],
                       ),

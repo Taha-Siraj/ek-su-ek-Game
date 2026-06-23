@@ -25,8 +25,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    // Auto navigate after 3.5 seconds
-    Future.delayed(const Duration(milliseconds: 3500), () {
+    // Auto navigate after 1.8 seconds to speed up loading time
+    Future.delayed(const Duration(milliseconds: 1800), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(

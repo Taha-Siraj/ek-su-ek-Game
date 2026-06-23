@@ -35,7 +35,10 @@ class HudStats extends StatelessWidget {
                   child: CircleAvatar(
                     radius: 14,
                     backgroundColor: MidnightNeonTheme.surfaceContainerLow,
-                    child: Icon(avatarIcon, color: MidnightNeonTheme.primaryContainer, size: 16),
+                    backgroundImage: audio.playerAvatarUrl != null ? NetworkImage(audio.playerAvatarUrl!) : null,
+                    child: audio.playerAvatarUrl == null
+                        ? Icon(avatarIcon, color: MidnightNeonTheme.primaryContainer, size: 16)
+                        : null,
                   ),
                 ),
                 const SizedBox(width: 8),

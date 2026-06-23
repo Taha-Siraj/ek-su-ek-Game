@@ -10,7 +10,8 @@ import 'victory_screen_animated.dart';
 import 'game_over_screen_animated.dart';
 
 class GameplayGridScreen extends StatefulWidget {
-  const GameplayGridScreen({Key? key}) : super(key: key);
+  final bool isTrainingMode;
+  const GameplayGridScreen({Key? key, this.isTrainingMode = false}) : super(key: key);
 
   @override
   State<GameplayGridScreen> createState() => _GameplayGridScreenState();
@@ -72,22 +73,114 @@ class _GameplayGridScreenState extends State<GameplayGridScreen> with TickerProv
     });
   }
 
+  void _showTrainingGuideDialog(int addedValue) {
+    _gameTimer?.cancel();
+    final audio = Provider.of<AudioManager>(context, listen: false);
+    audio.playSfx('lose');
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        final remaining = _targetScore - _currentScore;
+        return AlertDialog(
+          backgroundColor: MidnightNeonTheme.bgSecondary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusLarge),
+            side: const BorderSide(color: MidnightNeonTheme.danger, width: 2),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: MidnightNeonTheme.danger, size: 28),
+              const SizedBox(width: 8),
+              Text(
+                "BUST WARNING!",
+                style: MidnightNeonTheme.headlineMd.copyWith(color: MidnightNeonTheme.danger, fontSize: 18),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "You selected a card with +$addedValue.",
+                style: MidnightNeonTheme.bodyMd.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Your current score is $_currentScore. Adding $addedValue makes it ${_currentScore + addedValue}, which exceeds the 101 limit!",
+                style: MidnightNeonTheme.bodyMd.copyWith(color: Colors.white70),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: MidnightNeonTheme.primaryContainer.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
+                  border: Border.all(color: MidnightNeonTheme.primaryContainer.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.lightbulb_outline, color: MidnightNeonTheme.primaryContainer, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "GUIDE: You need exactly +$remaining to win. Select a number smaller than or equal to $remaining.",
+                        style: MidnightNeonTheme.bodyMd.copyWith(color: MidnightNeonTheme.primaryContainer, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                audio.playClick();
+                Navigator.of(context).pop();
+                _startTimer();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: MidnightNeonTheme.primaryContainer,
+                foregroundColor: MidnightNeonTheme.bgPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
+                ),
+              ),
+              child: Text(
+                "TRY ANOTHER CARD",
+                style: MidnightNeonTheme.labelCaps.copyWith(
+                  color: MidnightNeonTheme.bgPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _onCellTapped(int index) {
     final audio = Provider.of<AudioManager>(context, listen: false);
     audio.playClick();
     audio.triggerHaptic();
 
+    final addedScore = _gridNumbers[index];
+    if (widget.isTrainingMode && _currentScore + addedScore > _targetScore) {
+      _showTrainingGuideDialog(addedScore);
+      return;
+    }
+
     setState(() {
       _lastSelectedIdx = index;
-      final addedScore = _gridNumbers[index];
       _currentScore += addedScore;
       _roundNumber++;
 
-      // Shake indicator animation trigger can go here
-      // regenerate cell
       _gridNumbers[index] = _random.nextInt(20) + 2;
 
-      // Verify Win/Loss conditions
       if (_currentScore == _targetScore) {
         _gameTimer?.cancel();
         _triggerVictory();
@@ -97,7 +190,6 @@ class _GameplayGridScreenState extends State<GameplayGridScreen> with TickerProv
       }
     });
 
-    // Reset last selected index highlight after delay
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
         setState(() {

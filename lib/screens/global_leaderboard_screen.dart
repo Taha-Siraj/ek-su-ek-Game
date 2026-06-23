@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme.dart';
 import '../widgets/glass_card.dart';
 import '../services/audio_manager.dart';
+import '../widgets/player_profile_card_dialog.dart';
 
 class GlobalLeaderboardScreen extends StatefulWidget {
   const GlobalLeaderboardScreen({Key? key}) : super(key: key);
@@ -131,12 +132,6 @@ class _GlobalLeaderboardScreenState extends State<GlobalLeaderboardScreen> {
     final int globalRankNum = (10000 - myXp ~/ 10).clamp(1, 9999);
     final String globalRank = "#${_formatNumber(globalRankNum)}";
 
-    final List<Map<String, dynamic>> activeList = _activeTab == 0
-        ? _globalPlayers
-        : _activeTab == 1
-            ? _friendsPlayers
-            : _countryPlayers;
-
     return Scaffold(
       body: Stack(
         children: [
@@ -172,11 +167,14 @@ class _GlobalLeaderboardScreenState extends State<GlobalLeaderboardScreen> {
                           children: [
                             Row(
                               children: [
-                                CircleAvatar(
-                                  backgroundColor: MidnightNeonTheme.primaryContainer.withOpacity(0.1),
-                                  radius: 20,
-                                  child: Icon(myAvatar, color: MidnightNeonTheme.primaryContainer, size: 20),
-                                ),
+                                 CircleAvatar(
+                                   backgroundColor: MidnightNeonTheme.primaryContainer.withOpacity(0.1),
+                                   radius: 20,
+                                   backgroundImage: audio.playerAvatarUrl != null ? NetworkImage(audio.playerAvatarUrl!) : null,
+                                   child: audio.playerAvatarUrl == null
+                                       ? Icon(myAvatar, color: MidnightNeonTheme.primaryContainer, size: 20)
+                                       : null,
+                                 ),
                                 const SizedBox(width: 12),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,78 +313,99 @@ class _GlobalLeaderboardScreenState extends State<GlobalLeaderboardScreen> {
                             final isPodium = index < 3;
                             final Color podiumColor = player['color'] ?? MidnightNeonTheme.textSecondary;
 
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: isPodium
-                                    ? podiumColor.withOpacity(0.06)
-                                    : MidnightNeonTheme.surfaceContainerLow.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
-                                border: Border.all(
+                            return InkWell(
+                              onTap: () {
+                                audio.playClick();
+                                audio.triggerHaptic();
+                                if (player['uid'] != null) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => PlayerProfileCardDialog(
+                                      targetUid: player['uid'],
+                                      playerName: player['name'],
+                                      avatarUrl: player['avatarUrl'],
+                                      avatarCode: player['avatarCode'] ?? Icons.face_retouching_natural.codePoint,
+                                      xp: player['xp'] ?? 0,
+                                      totalGames: player['totalGames'] ?? 0,
+                                      totalWins: player['totalWins'] ?? 0,
+                                    ),
+                                  );
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
                                   color: isPodium
-                                      ? podiumColor.withOpacity(0.25)
-                                      : Colors.white.withOpacity(0.03),
-                                  width: 1,
+                                      ? podiumColor.withOpacity(0.06)
+                                      : MidnightNeonTheme.surfaceContainerLow.withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
+                                  border: Border.all(
+                                    color: isPodium
+                                        ? podiumColor.withOpacity(0.25)
+                                        : Colors.white.withOpacity(0.03),
+                                    width: 1,
+                                  ),
                                 ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      // Rank badge
-                                      Container(
-                                        width: 36,
-                                        height: 36,
-                                        decoration: BoxDecoration(
-                                          color: isPodium ? podiumColor.withOpacity(0.12) : Colors.transparent,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            player['rank'],
-                                            style: MidnightNeonTheme.displayDigit.copyWith(
-                                              fontSize: 12,
-                                              color: podiumColor,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        // Rank badge
+                                        Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: isPodium ? podiumColor.withOpacity(0.12) : Colors.transparent,
+                                            shape: BoxShape.circle,
                                           ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            player['name'],
-                                            style: MidnightNeonTheme.headlineMd.copyWith(
-                                              fontSize: 15,
-                                              color: isPodium ? Colors.white : MidnightNeonTheme.textSecondary,
-                                            ),
-                                          ),
-                                          if (player['subtitle'] != null) ...[
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              player['subtitle'],
-                                              style: MidnightNeonTheme.labelCaps.copyWith(
-                                                fontSize: 8,
-                                                color: MidnightNeonTheme.textSecondary.withOpacity(0.5),
+                                          child: Center(
+                                            child: Text(
+                                              player['rank'],
+                                              style: MidnightNeonTheme.displayDigit.copyWith(
+                                                fontSize: 12,
+                                                color: podiumColor,
+                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              player['name'],
+                                              style: MidnightNeonTheme.headlineMd.copyWith(
+                                                fontSize: 15,
+                                                color: isPodium ? Colors.white : MidnightNeonTheme.textSecondary,
+                                              ),
+                                            ),
+                                            if (player['subtitle'] != null) ...[
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                player['subtitle'],
+                                                style: MidnightNeonTheme.labelCaps.copyWith(
+                                                  fontSize: 8,
+                                                  color: MidnightNeonTheme.textSecondary.withOpacity(0.5),
+                                                ),
+                                              ),
+                                            ],
                                           ],
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  Text(
-                                    player['score'],
-                                    style: MidnightNeonTheme.displayDigit.copyWith(
-                                      fontSize: 14,
-                                      color: isPodium ? player['color'] : MidnightNeonTheme.textSecondary,
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                    Text(
+                                      player['score'],
+                                      style: MidnightNeonTheme.displayDigit.copyWith(
+                                        fontSize: 14,
+                                        color: isPodium ? player['color'] : MidnightNeonTheme.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           },

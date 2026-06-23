@@ -5,6 +5,7 @@ import '../widgets/glass_card.dart';
 import '../services/audio_manager.dart';
 import '../services/ad_service.dart';
 import 'settings_config_screen.dart';
+import 'friends_list_screen.dart';
 
 class PlayerProfileScreen extends StatelessWidget {
   const PlayerProfileScreen({Key? key}) : super(key: key);
@@ -168,7 +169,10 @@ class PlayerProfileScreen extends StatelessWidget {
                               ),
                               child: CircleAvatar(
                                 backgroundColor: MidnightNeonTheme.surfaceContainerLow,
-                                child: Icon(avatar, color: MidnightNeonTheme.primaryContainer, size: 20),
+                                backgroundImage: audio.playerAvatarUrl != null ? NetworkImage(audio.playerAvatarUrl!) : null,
+                                child: audio.playerAvatarUrl == null
+                                    ? Icon(avatar, color: MidnightNeonTheme.primaryContainer, size: 20)
+                                    : null,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -215,11 +219,14 @@ class PlayerProfileScreen extends StatelessWidget {
                                 ),
                                 child: CircleAvatar(
                                   backgroundColor: MidnightNeonTheme.surfaceContainerLow,
-                                  child: Icon(
-                                    avatar,
-                                    color: MidnightNeonTheme.primaryContainer,
-                                    size: 64,
-                                  ),
+                                  backgroundImage: audio.playerAvatarUrl != null ? NetworkImage(audio.playerAvatarUrl!) : null,
+                                  child: audio.playerAvatarUrl == null
+                                      ? Icon(
+                                          avatar,
+                                          color: MidnightNeonTheme.primaryContainer,
+                                          size: 64,
+                                        )
+                                      : null,
                                 ),
                               ),
                               // Level overlay badge
@@ -423,6 +430,78 @@ class PlayerProfileScreen extends StatelessWidget {
                                     ],
                                   ),
                                 ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // My Friends / Socials Card
+                    GlassCard(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      borderColor: MidnightNeonTheme.primaryContainer.withOpacity(0.2),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: MidnightNeonTheme.primaryContainer.withOpacity(0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.people,
+                                  color: MidnightNeonTheme.primaryContainer,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "MY FRIENDS",
+                                    style: MidnightNeonTheme.labelCaps.copyWith(
+                                      fontSize: 10,
+                                      color: MidnightNeonTheme.primaryContainer,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "Manage friends & view requests",
+                                    style: MidnightNeonTheme.bodyMd.copyWith(
+                                      fontSize: 12,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              audio.playClick();
+                              audio.triggerHaptic();
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => const FriendsListScreen()),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: MidnightNeonTheme.primaryContainer,
+                              foregroundColor: MidnightNeonTheme.bgPrimary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(MidnightNeonTheme.radiusMedium),
+                              ),
+                            ),
+                            child: Text(
+                              "VIEW LIST",
+                              style: MidnightNeonTheme.labelCaps.copyWith(
+                                fontSize: 10,
+                                color: MidnightNeonTheme.bgPrimary,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
