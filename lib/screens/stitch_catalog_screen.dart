@@ -143,8 +143,8 @@ class StitchCatalogScreen extends StatelessWidget {
         "screen": const ShaderScreen(),
       },
       {
-        "title": "Ek Sau Ek Neon Logo",
-        "desc": "Clean neon brand logo display asset.",
+        "title": "The Last Number Logo",
+        "desc": "Clean brand logo display asset.",
         "icon": Icons.grid_3x3,
         "screen": const EkSauEkLogoScreen(),
       },

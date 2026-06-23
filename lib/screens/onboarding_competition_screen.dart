@@ -161,3 +161,5 @@ class OnboardingCompetitionScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}

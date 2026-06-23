@@ -37,10 +37,10 @@ class OnboardingObjectiveScreen extends StatelessWidget {
                             children: [
                               const SizedBox(height: 24),
                               Text(
-                                "EK SAU EK",
+                                "THE LAST NUMBER",
                                 style: MidnightNeonTheme.headlineMd.copyWith(
                                   color: MidnightNeonTheme.primary.withOpacity(0.6),
-                                  fontSize: 20,
+                                  fontSize: 16,
                                   letterSpacing: 2.0,
                                 ),
                               ),

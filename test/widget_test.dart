@@ -15,6 +15,6 @@ void main() {
     await tester.pumpWidget(const EkSauEkApp());
 
     // Verify that splash screen title is present.
-    expect(find.text('EK SAU EK'), findsOneWidget);
+    expect(find.text('THE LAST NUMBER'), findsOneWidget);
   });
 }
